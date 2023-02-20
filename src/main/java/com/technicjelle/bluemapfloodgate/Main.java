@@ -1,70 +1,95 @@
 package com.technicjelle.bluemapfloodgate;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.plugin.SkinProvider;
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.CustomChart;
+import org.bstats.json.JsonObjectBuilder;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.geysermc.floodgate.api.FloodgateApi;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
+import java.nio.file.Files;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public final class Main extends JavaPlugin {
-	private final boolean VERBOSE_LOGGING = true;
+	private static String FLOODGATE_URL;
+	private static String NORMAL_URL;
+	private static boolean VERBOSE_LOGGING = true;
 	private void verboseLog(String message) {
 		if (VERBOSE_LOGGING) getLogger().info(message);
 	}
 
 	@Override
 	public void onEnable() {
-		new Metrics(this, 16426);
+		Metrics metrics = new Metrics(this, 17778);
 
-		UpdateChecker.check("TechnicJelle", "BlueMapFloodgate", getDescription().getVersion());
+		UpdateChecker.check("Semetrix", "AdvancedBluemapSkins", getDescription().getVersion());
+
+		// Copy config into folder
+		if(getDataFolder().mkdirs()) getLogger().info("Created plugin config directory");
+		File configFile = new File(getDataFolder(), "config.yml");
+		if (!configFile.exists()) {
+			try {
+				getLogger().info("Creating config file");
+				Files.copy(Objects.requireNonNull(getResource("config.yml")), configFile.toPath());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
 		BlueMapAPI.onEnable(blueMapOnEnableListener);
 
-		getLogger().info("BlueMap Floodgate compatibility plugin enabled!");
+
+
+		getLogger().info("BlueMap Custom Skin compatibility plugin enabled!");
 	}
 
 	private final Consumer<BlueMapAPI> blueMapOnEnableListener = blueMapAPI -> {
 		UpdateChecker.logUpdateMessage(getLogger());
 
-		SkinProvider floodgateSkinProvider = new SkinProvider() {
-			private final SkinProvider defaultSkinProvider = blueMapAPI.getPlugin().getSkinProvider();
+		//Load config from disk
+		reloadConfig();
 
+		//Load config values into variables
+		NORMAL_URL = getConfig().getString("normal-url");
+		FLOODGATE_URL = getConfig().getString("floodgate-url");
+		VERBOSE_LOGGING = Boolean.parseBoolean(Objects.requireNonNull(getConfig().getString("verbose-logging")).toLowerCase());
+
+		SkinProvider floodgateSkinProvider = new SkinProvider() {
 			@Override
-			public Optional<BufferedImage> load(UUID playerUUID) throws IOException {
-				if (isFloodgatePlayer(playerUUID)) {
+			public Optional<BufferedImage> load(UUID playerUUID) {
+				String username = getServer().getOfflinePlayer(playerUUID).getName();
+				assert username != null;
+
+				String localUrl;
+
+				if (FloodgateApi.getInstance().isFloodgatePlayer(playerUUID)) {
 					long xuid = getXuid(playerUUID);
-					@Nullable String textureID = textureIDFromXUID(xuid);
-					if (textureID == null) {
-						getLogger().warning("TextureID for " + playerUUID + " is null");
-						return Optional.empty();
-					}
-					@Nullable BufferedImage skin = skinFromTextureID(textureID);
-					if (skin == null) {
-						getLogger().warning("Skin for " + playerUUID + " is null");
-						return Optional.empty();
-					}
-					verboseLog("Skin for " + playerUUID + " successfully gotten!");
-					return Optional.of(skin);
+
+					localUrl = FLOODGATE_URL
+							.replace("{UUID}", playerUUID.toString())
+							.replace("{USERNAME}", username)
+							.replace("{XUID}", Long.toString(xuid));
+
 				} else {
-					return defaultSkinProvider.load(playerUUID);
+					localUrl = NORMAL_URL.replace("{UUID}", playerUUID.toString()).replace("{USERNAME}", username);
 				}
+				verboseLog("Downloading skin for " + username + " from " + localUrl);
+				BufferedImage img = imageFromURL(localUrl);
+				return Optional.ofNullable(img);
 			}
 		};
 
@@ -75,69 +100,15 @@ public final class Main extends JavaPlugin {
 	public void onDisable() {
 		BlueMapAPI.unregisterListener(blueMapOnEnableListener);
 
-		getLogger().info("BlueMap Floodgate compatibility plugin disabled!");
+		getLogger().info("BlueMap Custom Skin compatibility plugin disabled!");
 	}
 
 	// ================================================================================================================
 	// ===============================================Util Methods=====================================================
 	// ================================================================================================================
 
-	private boolean isFloodgatePlayer(UUID playerUUID) {
-		return playerUUID.version() == 0;
-	}
-
 	private long getXuid(UUID playerUUID) {
 		return playerUUID.getLeastSignificantBits();
-	}
-
-	/**
-	 * @param xuid XUID of the floodgate player
-	 * @return the texture ID of the player, or null if it could not be found
-	 */
-	private @Nullable String textureIDFromXUID(long xuid) {
-		try {
-			URL url = new URL("https://api.geysermc.org/v2/skin/" + xuid);
-			verboseLog("Getting textureID from " + url);
-			try {
-				URLConnection request = url.openConnection();
-				request.connect();
-
-				JsonObject joRoot = JsonParser.parseReader(new InputStreamReader((InputStream) request.getContent())).getAsJsonObject();
-				if (joRoot == null) {
-					getLogger().log(Level.WARNING, "joRoot is null!");
-					return null;
-				}
-
-				JsonElement jeTextureID = joRoot.get("texture_id");
-				if (jeTextureID == null) {
-					getLogger().log(Level.WARNING, "jeTextureID is null!");
-					return null;
-				}
-
-				String textureID = jeTextureID.getAsString();
-				if (textureID == null) {
-					getLogger().log(Level.WARNING, "textureID is null!");
-					return null;
-				}
-
-				return textureID;
-			} catch (IOException e) {
-				getLogger().log(Level.WARNING, "Failed to get the textureID for " + xuid + " from " + url, e);
-				return null;
-			}
-		} catch (MalformedURLException e) {
-			getLogger().log(Level.SEVERE, "Geyser API URL is malformed", e);
-			return null;
-		}
-	}
-
-	/**
-	 * @param textureID texture ID of the floodgate player
-	 * @return the skin of the player, or null if it could not be found
-	 */
-	private @Nullable BufferedImage skinFromTextureID(@NotNull String textureID) {
-		verboseLog("Getting skin from textureID: " + textureID);
-		return imageFromURL("https://textures.minecraft.net/texture/" + textureID);
 	}
 
 	/**
