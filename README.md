@@ -6,7 +6,8 @@
 
 This plugin aims to allow more advanced configuration of skin loading in Bluemap
 
-It can use 2 different APIs for floodgate players, and anything else. 
+It can use 2 different APIs for getting the skins, 1 is for floodgate players, and the other for anything else (Java players). 
+This is and changed version from Technic Jelle's plugin since it doesnt jsut fallback to default BlueMap skin API
 
 # Todo:
 - [Skinsrestorer support instead of custom link](https://github.com/SkinsRestorer/SkinsRestorerX/blob/dev/api/src/main/java/net/skinsrestorer/api/SkinsRestorerAPI.java)
