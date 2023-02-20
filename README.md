@@ -7,6 +7,6 @@
 This plugin aims to allow more advanced configuration of skin loading in Bluemap
 
 # Todo:
-- Skinsrestorer support instead of custom link
+- [Skinsrestorer support instead of custom link](https://github.com/SkinsRestorer/SkinsRestorerX/blob/dev/api/src/main/java/net/skinsrestorer/api/SkinsRestorerAPI.java)
 
 ### [Download](../../releases/latest)
