@@ -7,7 +7,7 @@
 This plugins aims to allow more advanced configuration of floodgate skin loading in BlueMap.
 
 With this plugin, you can use different skin APIs for floodgate players and normal Java players.
-This is different from TechnicJelle's plugin, because that one is not configurable at all, and just uses unconfigurable APIs for everything.
+This is different from TechnicJelle's plugin, because that one is not configurable at all, and just uses the official APIs for everything, instead of configurable ones.
 
 # Support
 
