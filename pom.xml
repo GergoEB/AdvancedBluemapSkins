@@ -6,7 +6,7 @@
 
 	<groupId>com.technicjelle</groupId>
 	<artifactId>BlueMapFloodgate</artifactId>
-	<version>3</version>
+	<version>1</version>
 	<packaging>jar</packaging>
 
 	<name>BlueMapFloodgate</name>
