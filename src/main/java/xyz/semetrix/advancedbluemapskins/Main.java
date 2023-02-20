@@ -4,7 +4,6 @@ import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.plugin.SkinProvider;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.geysermc.floodgate.api.FloodgateApi;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
