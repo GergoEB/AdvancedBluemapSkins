@@ -1,10 +1,10 @@
-name: BlueMapFloodgate
+name: AdvancedBlueMapSkins
 version: ${project.version}
-main: com.technicjelle.bluemapfloodgate.Main
+main: xyz.semetrix.advancedbluemapskins.Main
 api-version: 1.17
 depend:
   - BlueMap
   - floodgate
-author: TechnicJelle
+author: TechnicJelle, Semetrix
 description: ${project.description}
 website: ${project.url}

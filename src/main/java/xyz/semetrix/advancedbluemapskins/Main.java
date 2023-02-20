@@ -1,10 +1,8 @@
-package com.technicjelle.bluemapfloodgate;
+package xyz.semetrix.advancedbluemapskins;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.plugin.SkinProvider;
 import org.bstats.bukkit.Metrics;
-import org.bstats.charts.CustomChart;
-import org.bstats.json.JsonObjectBuilder;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.geysermc.floodgate.api.FloodgateApi;
 import org.jetbrains.annotations.NotNull;
@@ -119,7 +117,6 @@ public final class Main extends JavaPlugin {
 		BufferedImage result;
 		try {
 			URL imageUrl = new URL(url);
-			verboseLog("Getting image from URL: " + url);
 			try {
 				InputStream in = imageUrl.openStream();
 				result = ImageIO.read(in);

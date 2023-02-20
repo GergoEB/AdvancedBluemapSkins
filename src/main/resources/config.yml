@@ -7,8 +7,8 @@ floodgate-url: "https://mc-heads.net/skin/{UUID}"
 # If it's not a floodgate UUID, use this api
 # Avaliable placeholders, {UUID} {USERNAME}
 
-# Default: https://minotar.net/skin/{UUID}
-normal-url: "https://minotar.net/skin/{UUID}"
+# Default: https://minotar.net/skin/{USERNAME}
+normal-url: "https://minotar.net/skin/{USERNAME}"
 
 # Log everything, recommended when unknown errors are found
 
