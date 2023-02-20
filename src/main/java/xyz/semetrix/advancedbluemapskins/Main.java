@@ -74,7 +74,7 @@ public final class Main extends JavaPlugin {
 
 				String localUrl;
 
-				if (FloodgateApi.getInstance().isFloodgatePlayer(playerUUID)) {
+				if (playerUUID.version() == 0) { //check for floodgate player
 					long xuid = getXuid(playerUUID);
 
 					localUrl = FLOODGATE_URL
