@@ -37,7 +37,7 @@
 					<relocations>
 						<relocation>
 							<pattern>org.bstats</pattern>
-							<shadedPattern>com.technicjelle.bluemapfloodgate</shadedPattern>
+							<shadedPattern>xyz.semetrix.advancedbluemapskins</shadedPattern>
 						</relocation>
 					</relocations>
 				</configuration>
