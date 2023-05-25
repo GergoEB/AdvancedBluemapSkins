@@ -4,6 +4,8 @@ main: xyz.semetrix.advancedbluemapskins.Main
 api-version: 1.17
 depend:
   - BlueMap
+softdepend:
+  - SkinsRestorer
   - floodgate
 author: TechnicJelle, Semetrix
 description: ${project.description}
