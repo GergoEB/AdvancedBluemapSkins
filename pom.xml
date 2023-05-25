@@ -64,6 +64,10 @@
 
 	<repositories>
 		<repository>
+			<id>codemc-releases</id>
+			<url>https://repo.codemc.org/repository/maven-releases/</url>
+		</repository>
+		<repository>
 			<id>papermc-repo</id>
 			<url>https://papermc.io/repo/repository/maven-public/</url>
 		</repository>
@@ -88,6 +92,12 @@
 			<groupId>com.github.BlueMap-Minecraft</groupId>
 			<artifactId>BlueMapAPI</artifactId>
 			<version>v2.4.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.skinsrestorer</groupId>
+			<artifactId>skinsrestorer-api</artifactId>
+			<version>14.2.10</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

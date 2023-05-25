@@ -10,6 +10,12 @@ floodgate-url: "https://mc-heads.net/skin/{UUID}"
 # Default: https://minotar.net/skin/{USERNAME}
 normal-url: "https://minotar.net/skin/{USERNAME}"
 
+# If true, the skins from SkinsRestorer will be used.
+# Require: SkinsRestorer on the game server (not supported with the proxy server)
+
+# Default: false
+skins-restorer: false
+
 # Log everything, recommended when unknown errors are found
 
 # Default: false
