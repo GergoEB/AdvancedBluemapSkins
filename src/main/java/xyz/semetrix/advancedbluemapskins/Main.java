@@ -1,34 +1,25 @@
 package xyz.semetrix.advancedbluemapskins;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.plugin.SkinProvider;
-import org.bstats.bukkit.Metrics;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import org.bstats.bukkit.Metrics;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
+import xyz.semetrix.advancedbluemapskins.providers.FloodgateSkinProvider;
+import xyz.semetrix.advancedbluemapskins.providers.SkinsRestorerSkinProvider;
+import xyz.semetrix.advancedbluemapskins.providers.UrlSkinProvider;
 
 public final class Main extends JavaPlugin {
-	private static String FLOODGATE_URL;
-	private static String NORMAL_URL;
-	private static boolean VERBOSE_LOGGING = true;
-	private void verboseLog(String message) {
-		if (VERBOSE_LOGGING) getLogger().info(message);
-	}
-
 	@Override
 	public void onEnable() {
 		Metrics metrics = new Metrics(this, 17778);
@@ -61,33 +52,23 @@ public final class Main extends JavaPlugin {
 		reloadConfig();
 
 		//Load config values into variables
-		NORMAL_URL = getConfig().getString("normal-url");
-		FLOODGATE_URL = getConfig().getString("floodgate-url");
-		VERBOSE_LOGGING = Boolean.parseBoolean(Objects.requireNonNull(getConfig().getString("verbose-logging")).toLowerCase());
+		boolean verbose = getConfig().getBoolean("verbose-logging", false);
+		if (verbose) {
+			getLogger().setLevel(Level.FINE);
+		} else {
+			getLogger().setLevel(Level.INFO);
+		}
 
-		SkinProvider floodgateSkinProvider = new SkinProvider() {
-			@Override
-			public Optional<BufferedImage> load(UUID playerUUID) {
-				String username = getServer().getOfflinePlayer(playerUUID).getName();
-				assert username != null;
+		List<AbstractSkinProvider> skinProviders = skinProviders();
 
-				String localUrl;
-
-				if (playerUUID.version() == 0) { //check for floodgate player
-					long xuid = getXuid(playerUUID);
-
-					localUrl = FLOODGATE_URL
-							.replace("{UUID}", playerUUID.toString())
-							.replace("{USERNAME}", username)
-							.replace("{XUID}", Long.toString(xuid));
-
-				} else {
-					localUrl = NORMAL_URL.replace("{UUID}", playerUUID.toString()).replace("{USERNAME}", username);
-				}
-				verboseLog("Downloading skin for " + username + " from " + localUrl);
-				BufferedImage img = imageFromURL(localUrl);
-				return Optional.ofNullable(img);
+		SkinProvider floodgateSkinProvider = uuid -> {
+			Optional<AbstractSkinProvider> first = skinProviders.stream()
+					.filter(provider -> provider.test(uuid)).findFirst();
+			if (first.isPresent()) {
+				return first.get().load(uuid);
 			}
+
+			return Optional.empty();
 		};
 
 		blueMapAPI.getPlugin().setSkinProvider(floodgateSkinProvider);
@@ -100,34 +81,17 @@ public final class Main extends JavaPlugin {
 		getLogger().info("BlueMap Custom Skin compatibility plugin disabled!");
 	}
 
-	// ================================================================================================================
-	// ===============================================Util Methods=====================================================
-	// ================================================================================================================
-
-	private long getXuid(UUID playerUUID) {
-		return playerUUID.getLeastSignificantBits();
-	}
-
-	/**
-	 * @param url URL of the image
-	 * @return the image, or null if it could not be found
-	 */
-	private @Nullable BufferedImage imageFromURL(@NotNull String url) {
-		BufferedImage result;
-		try {
-			URL imageUrl = new URL(url);
-			try {
-				InputStream in = imageUrl.openStream();
-				result = ImageIO.read(in);
-				in.close();
-			} catch (IOException e) {
-				getLogger().log(Level.SEVERE, "Failed to get the image from " + url, e);
-				return null;
-			}
-		} catch (MalformedURLException e) {
-			getLogger().log(Level.SEVERE, "URL is malformed: " + url, e);
-			return null;
+	private List<AbstractSkinProvider> skinProviders() {
+		PluginManager pluginManager = getServer().getPluginManager();
+		Builder<AbstractSkinProvider> builder = ImmutableList.builder();
+		if (pluginManager.isPluginEnabled("floodgate")) {
+			builder.add(new FloodgateSkinProvider(this));
 		}
-		return result;
+		if (pluginManager.isPluginEnabled("SkinsRestorer")) {
+			builder.add(new SkinsRestorerSkinProvider(this));
+		}
+		builder.add(new UrlSkinProvider(this));
+
+		return builder.build();
 	}
 }
